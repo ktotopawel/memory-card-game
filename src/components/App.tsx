@@ -1,32 +1,45 @@
 import { useEffect, useState } from "react";
+import type { TarotCard } from "../types";
+import Game from "./Game";
 
 export default function App() {
-  const [cardList, setCardList] = useState([]);
+  const [cardList, setCardList] = useState<TarotCard[]>([]);
+  const [score, setScore] = useState(0);
+  const [hiScore, setHiScore] = useState(0);
   function getNewCards(amount: number) {
     if (amount > 78) throw new Error("amount too large");
     fetch(`https://tarotapi.dev/api/v1/cards/random?n=${amount}`)
       .then((response) => response.json())
       .then((response) => {
-        setCardList(response.cards);
-        console.log(response);
-        console.log(cardList);
+        const newCardList = response.cards.map((card: TarotCard) => {
+          card.isGuessed = false;
+          return card;
+        });
+        setCardList(newCardList);
       })
       .catch((error) => console.error(error));
   }
 
-  if (cardList.length < 1) getNewCards(20);
+  useEffect(() => {
+    getNewCards(10);
+  }, []);
 
   return (
     <>
-      <div>
-        {cardList.map((card) => {
-          return (
-            <div className="card" key={card.name_short}>
-              <h4>{card.name}</h4>
-            </div>
-          );
-        })}
-      </div>
+      {cardList.length === 0 ? (
+        <h1>Loading...</h1>
+      ) : (
+        <>
+          <h1>{score}</h1>
+          <Game
+            cardList={cardList}
+            score={score}
+            setScore={setScore}
+            hiScore={hiScore}
+            setHiScore={setHiScore}
+          ></Game>
+        </>
+      )}
     </>
   );
 }
